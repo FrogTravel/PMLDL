@@ -1,7 +1,5 @@
 # Modern Application Production
 
-## Sprint 0
-
 Language: Python
 
 Version Control: GitHub 
