@@ -64,3 +64,6 @@ For the training part, this week we worked on improving the fine-tuning of the G
 4) https://github.com/FrogTravel/PMLDL}{Our Github repository
 5) https://github.com/minimaxir/gpt-2-simple}{\texttt{gpt-2-simple GitHub page
 
+## Sprint 5
+
+We are now at Sprint 5. We are connecting our bot interface to a backend and making tests for a bot. We fine-tune the final model at the backend. 
