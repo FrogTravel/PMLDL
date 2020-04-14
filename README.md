@@ -40,8 +40,6 @@ Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova
 storypoints on vertical x days on horizontal axis
 Blue - ideal burndown, Green - our result
 
-Below are reports that we made for our course assignments. They might be different from the real tasks in trello in some way
-
 ## Sprint 2 & 3
 ### Burndown charts
 #### Sprint 2
@@ -52,6 +50,9 @@ Blue - ideal burndown, Green - our result
 ![](https://i.imgur.com/mVXGmoX.png)
 storypoints on vertical x days on horizontal axis
 Blue - ideal burndown, Green - our result
+
+Below are reports that we made for our course assignments. They might be different from the real tasks in trello in some way
+
 ### Dataset
 The dataset we going to use is taken from Kaggle competition [4]. It contains more than 38000 samples of so-called question-answer jokes. All jokes are parsed from Reddit.
 
