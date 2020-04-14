@@ -34,9 +34,18 @@ We are planning to deploy this project into telegram infrastructure for simple i
 Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova 
 3) Language Models are Unsupervised Multitask Learners. Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, Ilya Sutskever
 
-Below are reports that we made for our course assignments. They might be different from the real tasks in trello in some way
-## Sprint 2 & 3
+## Sprint 1 
+### Burndown chart
+![](https://i.imgur.com/FZn2vI5.png)
 
+Below are reports that we made for our course assignments. They might be different from the real tasks in trello in some way
+
+## Sprint 2 & 3
+### Burndown charts
+#### Sprint 2
+![](https://i.imgur.com/nYpBchu.png)
+#### Sprint 3
+![](https://i.imgur.com/mVXGmoX.png)
 ### Dataset
 The dataset we going to use is taken from Kaggle competition [4]. It contains more than 38000 samples of so-called question-answer jokes. All jokes are parsed from Reddit.
 
@@ -197,6 +206,8 @@ And sometimes...
 
 
 ## Sprint 4
+### Burndown chart 
+![](https://i.imgur.com/TAce2qR.png)
 ### Overview
 This week we focused on the prototype development. We contributed in the Telegram bot, deployment part and improvement of the fine-tuning of the GPT-2.
 
