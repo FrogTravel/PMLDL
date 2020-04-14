@@ -38,6 +38,7 @@ Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova
 ### Burndown chart
 ![](https://i.imgur.com/FZn2vI5.png)
 storypoints on vertical x days on horizontal axis
+Blue - ideal burndown, Green - our result
 
 Below are reports that we made for our course assignments. They might be different from the real tasks in trello in some way
 
@@ -46,9 +47,11 @@ Below are reports that we made for our course assignments. They might be differe
 #### Sprint 2
 ![](https://i.imgur.com/nYpBchu.png)
 storypoints on vertical x days on horizontal axis
+Blue - ideal burndown, Green - our result
 #### Sprint 3
 ![](https://i.imgur.com/mVXGmoX.png)
 storypoints on vertical x days on horizontal axis
+Blue - ideal burndown, Green - our result
 ### Dataset
 The dataset we going to use is taken from Kaggle competition [4]. It contains more than 38000 samples of so-called question-answer jokes. All jokes are parsed from Reddit.
 
@@ -212,6 +215,7 @@ And sometimes...
 ### Burndown chart 
 ![](https://i.imgur.com/TAce2qR.png)
 storypoints on vertical x days on horizontal axis
+Blue - ideal burndown, Green - our result
 ### Overview
 This week we focused on the prototype development. We contributed in the Telegram bot, deployment part and improvement of the fine-tuning of the GPT-2.
 
