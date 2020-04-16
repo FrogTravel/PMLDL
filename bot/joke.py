@@ -1,6 +1,4 @@
-class Joke():
-    def __init__(self, question, answer, id):
-        self.question = question
-        self.answer = answer
+class Joke:
+    def __init__(self, text, id):
         self.id = id
-        self.text = question + " \n" + answer
+        self.text = text

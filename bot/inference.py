@@ -52,7 +52,9 @@ class ModelWrapper(object):
         encoded_prompt = self.tokenizer.encode(text, add_special_tokens=False, return_tensors="pt")
         return encoded_prompt.to(self.device)
 
-    def generate(self, beginning):
+    def generate(self, beginning, num_return_sequences=None):
+        if num_return_sequences is None:
+            num_return_sequences = self.num_return_sequences
         encoded_prompt = self.__encode(beginning)
         output_sequences = self.model.generate(
             input_ids=encoded_prompt,
@@ -62,17 +64,33 @@ class ModelWrapper(object):
             top_p=self.p,
             repetition_penalty=self.repetition_penalty,
             do_sample=True,
-            num_return_sequences=self.num_return_sequences,
+            num_return_sequences=num_return_sequences,
         )
 
         # Remove the batch dimension when returning multiple sequences
         if len(output_sequences.shape) > 2:
             output_sequences.squeeze_()
-
-        generated_sequence = output_sequences[0].tolist()
-        return self.tokenizer.decode(generated_sequence, clean_up_tokenization_spaces=True)
+        if num_return_sequences == 1:
+            generated_sequence = output_sequences[0].tolist()
+            return self.tokenizer.decode(generated_sequence, clean_up_tokenization_spaces=True)
+        else:
+            return [self.tokenizer.decode(j, clean_up_tokenization_spaces=True) for j in output_sequences]
 
 
 if __name__ == '__main__':
-    m = ModelWrapper(model_path='gpt2')
-    m.generate("hello, world")  # TODO: fix max_length, because usually this model didn't reach set length.
+    import datetime
+
+    total_time = datetime.datetime.now()
+    m = ModelWrapper(model_path='gpt2', device='cuda')
+    ## Time test
+    # for i in range(10):
+    #     start = datetime.datetime.now()
+    #     m.generate("hello, world")
+    #     dt = datetime.datetime.now() - start
+    #     print("\t", dt)
+    ## Batch processing test
+    res = m.generate("Q:", num_return_sequences=4)
+    for j in res:
+        print(j)
+
+    print("Total time: ", datetime.datetime.now() - total_time)

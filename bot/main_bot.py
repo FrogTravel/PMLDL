@@ -6,41 +6,54 @@ import logging
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
-from telegram import InlineQueryResultArticle, InputTextMessageContent
-from telegram.ext import InlineQueryHandler
-import joke_generator
-import telegram.chataction
-from joke import Joke
+
+from bot.joke_generator import JokeGenerator
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-joke_id = 0
+# TODO: перед отправкой заменить на путь до обученной модели
+joke_generator = JokeGenerator(model_path='gpt2')
 
-def joke(update, context):
+splitter = "::"
+pos = "1"
+neg = "2"
+
+
+def joke_command_handler(update, context):
     # update.send_chat_action(chat_id=context, action=telegram.ChatAction.TYPING)
-    update.message.reply_text("Generating a joke")
+    # update.message.reply_text("Generating a joke")  # This message not disappears
+    general_joke_handler(update, context, promt_text="")
 
-    keyboard = [[InlineKeyboardButton("👍", callback_data='1'),
-                 InlineKeyboardButton("👎", callback_data='2')]]
+
+def text_handler(update, context):
+    question = update.message.text
+    general_joke_handler(update, context, question)
+
+
+def general_joke_handler(update, context, promt_text=""):
+    joke = joke_generator.generate_joke(promt=promt_text)
+    joke_id = joke.id
+
+    keyboard = [[InlineKeyboardButton("👍", callback_data=f'{joke_id}{splitter}{pos}'),
+                 InlineKeyboardButton("👎", callback_data=f'{joke_id}{splitter}{neg}')]]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-
-    joke = joke_generator.generate_joke()
-    joke_id = joke.id
 
     update.message.reply_text(joke.text, reply_markup=reply_markup)
 
 
-def button(update, context):
+def button_handler(update, context):
     query = update.callback_query
     data = query.data
-    if data == '1':
-        joke_generator.positive_grade(joke_id)
-    elif data == '2':
-        joke_generator.negative_grade(joke_id)
-
+    (joke_id, rating) = data.rsplit(splitter, 1)
+    user_id = "???"  # TODO: оно лежит где-то в context
+    if rating == pos:
+        joke_generator.positive_grade(user_id=user_id, joke_id=joke_id)
+    elif rating == neg:
+        joke_generator.negative_grade(user_id=user_id, joke_id=joke_id)
+    # TODO: Эта команда затерает сообщение с шуткой
     query.edit_message_text(text="Thank you for your feedback")
 
 
@@ -52,14 +65,6 @@ def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
-def text_handler(update, context):
-    keyboard = [[InlineKeyboardButton("👍", callback_data='1'),
-                 InlineKeyboardButton("👎", callback_data='2')]]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    question = update.message.text
-    generated_joke = joke_generator.generate_answer(Joke(question, "", joke_id + 1))
-    update.message.reply_text(generated_joke.text, reply_markup=reply_markup)
 
 def main():
     # Create the Updater and pass it your bot's token.
@@ -67,8 +72,8 @@ def main():
     # Post version 12 this will no longer be necessary
     updater = Updater(token, use_context=True)
 
-    updater.dispatcher.add_handler(CommandHandler('joke', joke))
-    updater.dispatcher.add_handler(CallbackQueryHandler(button))
+    updater.dispatcher.add_handler(CommandHandler('joke', joke_command_handler))
+    updater.dispatcher.add_handler(CallbackQueryHandler(button_handler))
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CallbackQueryHandler(text_handler))
     updater.dispatcher.add_error_handler(error)
