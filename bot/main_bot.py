@@ -20,8 +20,8 @@ cfg.read(os.path.join(os.path.dirname(__file__), 'bot.cfg'))
 
 model_cfg = cfg['model']
 joke_generator = JokeGenerator(model_path=model_cfg['model_path'],
-                               max_joke_len=model_cfg['max_joke_len'],
-                               jokes_buffer_size=model_cfg['buffer_size'],
+                               max_joke_len=int(model_cfg['max_joke_len']),
+                               jokes_buffer_size=int(model_cfg['buffer_size']),
                                model_device=model_cfg['device'])
 
 splitter = "::"
