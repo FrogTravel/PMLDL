@@ -22,7 +22,7 @@ class JokeGenerator(object):
     POS_GRADE = 1
     NEG_GRADE = -1
 
-    def __init__(self, model_path, max_joke_len=40, jokes_buffer_size=16):
+    def __init__(self, model_path, max_joke_len=40, jokes_buffer_size=16, model_device='cpu'):
         self.model = ModelWrapper(model_path, max_length=max_joke_len)
         self.store = storage
 

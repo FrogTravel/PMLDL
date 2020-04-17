@@ -1,22 +1,28 @@
-from joke_generator import JokeGenerator
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-import telegram
 import logging
+import os
+from configparser import ConfigParser
+
+import telegram
+from joke_generator import JokeGenerator
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 
 """
 Basic example for a bot that uses inline keyboards.
 """
-# TODO: Move to config
-token = "1180357649:AAF94C2hSNlPsM13_Ie1kGg_FvJvbMRYuwk"
-
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# TODO: move to config file (model_path, max_len, buffer size, cuda/cpu)
-joke_generator = JokeGenerator(model_path='model')
+cfg = ConfigParser()
+cfg.read(os.path.join(os.path.dirname(__file__), 'bot.cfg'))
+
+model_cfg = cfg['model']
+joke_generator = JokeGenerator(model_path=model_cfg['model_path'],
+                               max_joke_len=model_cfg['max_joke_len'],
+                               jokes_buffer_size=model_cfg['buffer_size'],
+                               model_device=model_cfg['device'])
 
 splitter = "::"
 pos = "1"
@@ -72,7 +78,7 @@ def main():
     # Create the Updater and pass it your bot's token.
     # Make sure to set use_context=True to use the new context based callbacks
     # Post version 12 this will no longer be necessary
-    updater = Updater(token, use_context=True)
+    updater = Updater(cfg['bot']['token'], use_context=True)
 
     updater.dispatcher.add_handler(
         CommandHandler('joke', joke_command_handler))
