@@ -48,13 +48,12 @@ def button_handler(update, context):
     query = update.callback_query
     data = query.data
     (joke_id, rating) = data.rsplit(splitter, 1)
-    user_id = "???"  # TODO: оно лежит где-то в context
+    user_id = query.message.chat.id
     if rating == pos:
         joke_generator.positive_grade(user_id=user_id, joke_id=joke_id)
     elif rating == neg:
         joke_generator.negative_grade(user_id=user_id, joke_id=joke_id)
-    # TODO: Эта команда затерает сообщение с шуткой
-    query.edit_message_text(text="Thank you for your feedback")
+    update.message.reply_text("Thank you for your feedback")
 
 
 def start(update, context):
