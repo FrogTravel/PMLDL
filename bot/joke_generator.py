@@ -33,8 +33,8 @@ class JokeGenerator(object):
         """Pretty-print the answer."""
         # Remove all text after the stop token
         text = text[: text.find(self.stop_token) if self.stop_token else None]
-        text = text.replace(self.default_promt_token, '<b>Question:</b>')
-        text = text.replace(self.answer_token, '\n<b>Answer:</b>')
+        text = text.replace(self.default_promt_token, '<b>Question:</b> ')
+        text = text.replace(self.answer_token, '\n<b>Answer:</b> ')
         # TODO: Delete multiple answers / inform user about the input format.
         return text
 
