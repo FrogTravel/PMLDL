@@ -1,4 +1,4 @@
-
+.idea/
 # Created by https://www.gitignore.io/api/python,pycharm,jupyternotebooks,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=python,pycharm,jupyternotebooks,visualstudiocode
 
@@ -224,5 +224,7 @@ dmypy.json
 
 
 # Project ignores
-# GPT-2 folder
-gpt-2
+# model folder
+model
+# jokes database
+jokes.db
