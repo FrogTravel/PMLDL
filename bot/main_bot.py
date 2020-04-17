@@ -1,20 +1,22 @@
-token = "1138687907:AAHn8gss3caT_ihrjogeICCXATcx6FquhLU"
+from joke_generator import JokeGenerator
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+import telegram
+import logging
+
 """
 Basic example for a bot that uses inline keyboards.
 """
-import logging
+# TODO: Move to config
+token = "1180357649:AAF94C2hSNlPsM13_Ie1kGg_FvJvbMRYuwk"
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
-
-from bot.joke_generator import JokeGenerator
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# TODO: перед отправкой заменить на путь до обученной модели
-joke_generator = JokeGenerator(model_path='gpt2')
+# TODO: move to config file (model_path, max_len, buffer size, cuda/cpu)
+joke_generator = JokeGenerator(model_path='model')
 
 splitter = "::"
 pos = "1"
@@ -41,7 +43,8 @@ def general_joke_handler(update, context, promt_text=""):
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    update.message.reply_text(joke.text, reply_markup=reply_markup)
+    update.message.reply_text(
+        joke.text, reply_markup=reply_markup, parse_mode=telegram.ParseMode.HTML)
 
 
 def button_handler(update, context):
@@ -53,7 +56,7 @@ def button_handler(update, context):
         joke_generator.positive_grade(user_id=user_id, joke_id=joke_id)
     elif rating == neg:
         joke_generator.negative_grade(user_id=user_id, joke_id=joke_id)
-    update.message.reply_text("Thank you for your feedback")
+    query.message.reply_text("Thank you for your feedback")
 
 
 def start(update, context):
@@ -71,7 +74,8 @@ def main():
     # Post version 12 this will no longer be necessary
     updater = Updater(token, use_context=True)
 
-    updater.dispatcher.add_handler(CommandHandler('joke', joke_command_handler))
+    updater.dispatcher.add_handler(
+        CommandHandler('joke', joke_command_handler))
     updater.dispatcher.add_handler(CallbackQueryHandler(button_handler))
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CallbackQueryHandler(text_handler))

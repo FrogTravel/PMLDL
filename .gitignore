@@ -224,5 +224,7 @@ dmypy.json
 
 
 # Project ignores
-# GPT-2 folder
-gpt-2
+# model folder
+model
+# jokes database
+jokes.db

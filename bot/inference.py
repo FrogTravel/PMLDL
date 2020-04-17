@@ -34,8 +34,7 @@ class ModelWrapper(object):
                  num_return_sequences=1,
                  repetition_penalty=1.0,
                  k=0,
-                 p=0.9,
-                 ):
+                 p=0.9,):
         self.num_return_sequences = num_return_sequences
         self.repetition_penalty = repetition_penalty
         self.k = k
@@ -49,7 +48,8 @@ class ModelWrapper(object):
         self.model.to(device)
 
     def __encode(self, text):
-        encoded_prompt = self.tokenizer.encode(text, add_special_tokens=False, return_tensors="pt")
+        encoded_prompt = self.tokenizer.encode(
+            text, add_special_tokens=False, return_tensors="pt")
         return encoded_prompt.to(self.device)
 
     def generate(self, beginning, num_return_sequences=None):
@@ -82,14 +82,14 @@ if __name__ == '__main__':
 
     total_time = datetime.datetime.now()
     m = ModelWrapper(model_path='gpt2', device='cuda')
-    ## Time test
+    # Time test
     # for i in range(10):
     #     start = datetime.datetime.now()
     #     m.generate("hello, world")
     #     dt = datetime.datetime.now() - start
     #     print("\t", dt)
-    ## Batch processing test
-    res = m.generate("Q:", num_return_sequences=4)
+    # Batch processing test
+    res = m.generate("<|startoftext|>[QUESTION] ", num_return_sequences=4)
     for j in res:
         print(j)
 
