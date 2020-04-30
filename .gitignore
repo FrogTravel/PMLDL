@@ -226,5 +226,8 @@ dmypy.json
 # Project ignores
 # model folder
 model
+
+# prep files
+data/prep
 # jokes database
 jokes.db
