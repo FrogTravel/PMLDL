@@ -30,11 +30,11 @@ class ModelWrapper(object):
                  device='cpu',
                  model_type='gpt2',
                  max_length=40,
-                 temperature=0.7,
+                 temperature=0.9,
                  num_return_sequences=1,
                  repetition_penalty=1.0,
-                 k=0,
-                 p=0.9,):
+                 k=50,
+                 p=0.95,):
         self.num_return_sequences = num_return_sequences
         self.repetition_penalty = repetition_penalty
         self.k = k
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     #     dt = datetime.datetime.now() - start
     #     print("\t", dt)
     # Batch processing test
-    res = m.generate("<|startoftext|>[QUESTION] ", num_return_sequences=4)
+    res = m.generate("[QUESTION] ", num_return_sequences=4)
     for j in res:
         print(j)
 

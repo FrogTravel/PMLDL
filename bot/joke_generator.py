@@ -16,7 +16,7 @@ def synchronized(func):
 
 
 class JokeGenerator(object):
-    default_promt_token = '<|startoftext|>[QUESTION] '
+    default_promt_token = '[QUESTION] '
     answer_token = '[ANSWER] '
     stop_token = '<|endoftext|>'
     POS_GRADE = 1
