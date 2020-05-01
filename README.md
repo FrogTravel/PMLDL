@@ -12,6 +12,8 @@ User Stories: [GitHub issues](https://github.com/FrogTravel/PMLDL/issues)
 
 We are using feature-oriented branches
 
+Team: Irina Podlipnova, Boris Guryev, Ekaterina Levchenko (Scram Master), Vladislav Kuleykin
+
 ## Project Proposal 
 
 ### General
@@ -26,7 +28,7 @@ For training, we will apply transfer learning. As a starting model we will try d
 ### Evaluation
 Joking is a subjective topic, so we are planning to ask people to evaluate samples of generated jokes. And afterward, we'll compare the results for different models.
 
-### Final result
+### Expected Final Result
 We are planning to deploy this project into telegram infrastructure for simple interaction with the user. The flexibility of this platform covers all requirements described above such as: deliver content, collecting evaluation from users and easy deployment.
 
 1) [ Kaggle dataset](https://www.kaggle.com/jiriroz/qa-jokes )
