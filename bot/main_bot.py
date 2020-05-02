@@ -75,7 +75,7 @@ def button_handler(update, context):
         joke_generator.positive_grade(user_id=user_id, joke_id=joke_id)
     elif rating == neg:
         joke_generator.negative_grade(user_id=user_id, joke_id=joke_id)
-    query.message.reply_text("Thank you for your feedback")
+    context.bot.answer_callback_query(query.id, "Thank you for your feedback")
 
 
 def start(update, context):
