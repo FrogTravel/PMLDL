@@ -1,10 +1,11 @@
 import logging
 import os
+from functools import wraps
 from configparser import ConfigParser
 
 import telegram
 from joke_generator import JokeGenerator
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ChatAction
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 
 """
@@ -29,6 +30,17 @@ pos = "1"
 neg = "2"
 
 
+def send_typing_action(func):
+    """Sends typing action while processing func command."""
+
+    @wraps(func)
+    def command_func(update, context, *args, **kwargs):
+        context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
+        return func(update, context,  *args, **kwargs)
+
+    return command_func
+
+
 def joke_command_handler(update, context):
     # update.send_chat_action(chat_id=context, action=telegram.ChatAction.TYPING)
     # update.message.reply_text("Generating a joke")  # This message not disappears
@@ -40,6 +52,7 @@ def text_handler(update, context):
     general_joke_handler(update, context, question)
 
 
+@send_typing_action
 def general_joke_handler(update, context, promt_text=""):
     joke = joke_generator.generate_joke(promt=promt_text)
     joke_id = joke.id
