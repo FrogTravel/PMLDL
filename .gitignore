@@ -224,8 +224,11 @@ dmypy.json
 
 
 # Project ignores
-# model folder
+# models folder
 model
+train/runs
+train/output*
+train/models
 
 # prep files
 data/prep
