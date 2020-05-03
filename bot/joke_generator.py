@@ -1,6 +1,7 @@
 import random
 import os
 import threading
+import re
 from itertools import cycle
 
 import pandas as pd
@@ -23,7 +24,7 @@ def synchronized(func):
 class AbstractJokeGenerator(ABC):
     """Abstract class for joke generation using `ModelWrapper`."""
 
-    default_promt_token = '[QUESTION] '
+    default_promt_token = '[QUESTION]'
     answer_token = '[ANSWER]'
     custom_promt = f'{default_promt_token}{{}}\n{answer_token}'
     stop_token = '<|endoftext|>'
@@ -47,9 +48,11 @@ class AbstractJokeGenerator(ABC):
             """Pretty-print the answer."""
             # Remove all text after the stop token
             text = text[: text.find(self.stop_token) if self.stop_token else None]
-            text = text.replace(self.default_promt_token, '<b>Question:</b> ')
-            text = text.replace(self.answer_token, '\n<b>Answer:</b>')
-            # TODO: Delete multiple answers / inform user about the input format.
+            # Remove multiple answers
+            text = self.answer_token.join(text.split(self.answer_token, 2)[:2])
+            # Replace model tokens with html formatted ones.
+            text = re.sub(f'\{self.default_promt_token} *', '<b>Question:</b> ', text)
+            text = re.sub(f'\{self.answer_token} *', '\n<b>Answer:</b> ', text)
             return text
 
         if isinstance(model_output, str):
@@ -112,7 +115,7 @@ class AbstractJokeGenerator(ABC):
     @synchronized
     def _continue_joke(self, model, promt):
         """Continue the joke given in promt."""
-        model_promt = self.custom_promt.format(promt)
+        model_promt = self.custom_promt.format(' ' + promt.strip())
         return self.__call_model(model, model_promt, num_return_sequences=1)[0]
 
 class JokeGenerator(AbstractJokeGenerator):
