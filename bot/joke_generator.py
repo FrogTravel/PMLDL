@@ -1,4 +1,5 @@
 import random
+import os
 import threading
 from itertools import cycle
 
@@ -6,6 +7,8 @@ import pandas as pd
 import storage
 from inference import ModelWrapper
 from joke import Joke
+
+from abc import ABC, abstractmethod
 
 
 def synchronized(func):
@@ -17,8 +20,9 @@ def synchronized(func):
 
     return synced_func
 
+class AbstractJokeGenerator(ABC):
+    """Abstract class for joke generation using `ModelWrapper`."""
 
-class JokeGenerator:
     default_promt_token = '[QUESTION] '
     answer_token = '[ANSWER]'
     custom_promt = f'{default_promt_token}{{}}\n{answer_token}'
@@ -26,12 +30,9 @@ class JokeGenerator:
     POS_GRADE = 1
     NEG_GRADE = -1
 
-    def __init__(self, model_path, max_joke_len=40, jokes_buffer_size=16, model_device='cpu'):
-        self.model = ModelWrapper(model_path, max_length=max_joke_len)
+    def __init__(self, jokes_buffer_size):
         self.store = storage
-
         self.jokes_buffer_size = jokes_buffer_size
-        self.__fill_jokes_buffer()
 
     def positive_grade(self, user_id, joke_id):
         self.store.add_or_update_vote(
@@ -40,17 +41,7 @@ class JokeGenerator:
     def negative_grade(self, user_id, joke_id):
         self.store.add_or_update_vote(
             joke_id=joke_id, user_id=user_id, rating=self.NEG_GRADE)
-
-    @synchronized
-    def generate_joke(self, promt=""):
-        if promt:
-            joke_text = self.__continue_joke(self.custom_promt.format(promt))
-        else:
-            joke_text = self.__get_joke_from_buffer()
-        joke_text = self._prettify_result(joke_text)
-        joke_id = self.store.add_joke(joke_text)
-        return Joke(id=joke_id, text=joke_text)
-
+    
     def _prettify_result(self, model_output):
         def pp_answer(text):
             """Pretty-print the answer."""
@@ -67,119 +58,162 @@ class JokeGenerator:
             return [pp_answer(ans) for ans in model_output]
 
     @synchronized
-    def _call_model(self, prompt, num_return_sequences):
-        """Generate the joke and prettify the output."""
-        return self.model.generate(prompt, num_return_sequences)
+    def generate_joke(self, model, promt=""):
+        """Generate the joke from given promt.
+        
+        :param model: model to use to generate joke.
+        :param promt: (optional) promt for a joke, if not given
+        generates the whole joke
+        :return: `Joke` object
+        """
+        if promt:
+            print(f'[INFO] continue - Model: {model.name}')
+            res = self._continue_joke(model, promt)
+        else:
+            res = self._get_joke_from_buffer()
+        res['text'] = self._prettify_result(res['text'])
+        joke_id = self.store.add_joke(**res)
+        return Joke(id=joke_id, text=res['text'])
+    
+    @synchronized
+    def __call_model(self, model, prompt, num_return_sequences):
+        """Call the model to generate the joke.
+
+        :param model: model to use
+        :param promt: prompt for the model
+        :param num_return_sequences: number of sequences to generate
+        :return: list of (num_return_sequences) dicts
+        with 'text' and 'generated_by' fields
+        """
+        return [{
+            'generated_by': model.name,
+            'text': seq
+        } for seq in model.generate(prompt, num_return_sequences)]
+    
+    @synchronized
+    def _fill_jokes_buffer(self, model):
+        """Fill the jokes buffer associated with given model.
+        WARNING: Default implementation just returns the result.
+
+        :param model: model to use
+        :return: see `__call_model` function
+        """
+        return self.__call_model(model, self.default_promt_token,
+                                num_return_sequences=self.jokes_buffer_size)
+    
+    @synchronized
+    @abstractmethod
+    def _get_joke_from_buffer(self, model):
+        """Get the new joke from the buffer for given model.
+        If needed update the buffer.
+        """
+        pass
+    
+    @synchronized
+    def _continue_joke(self, model, promt):
+        """Continue the joke given in promt."""
+        model_promt = self.custom_promt.format(promt)
+        return self.__call_model(model, model_promt, num_return_sequences=1)[0]
+
+class JokeGenerator(AbstractJokeGenerator):
+    """Simple Joke generator using one model."""
+
+    def __init__(self, model_path, max_joke_len=40, jokes_buffer_size=16, model_device='cpu'):
+        super().__init__(jokes_buffer_size)
+        model_name = os.path.split(model_path)[1]
+        self.model = ModelWrapper(model_path, model_name, max_length=max_joke_len)
+        self._fill_jokes_buffer()
 
     @synchronized
-    def __fill_jokes_buffer(self):
-        self.jokes_buffer = self._call_model(self.default_promt_token, num_return_sequences=self.jokes_buffer_size)
+    def _fill_jokes_buffer(self):
+        self.jokes_buffer = super()._fill_jokes_buffer(self.model)
 
     @synchronized
-    def __get_joke_from_buffer(self):
+    def _get_joke_from_buffer(self):
         if len(self.jokes_buffer) == 0:
-            self.__fill_jokes_buffer()
-        return self.jokes_buffer.pop()
+            self._fill_jokes_buffer()
+        return buffer.pop()
 
     @synchronized
-    def __continue_joke(self, promt):
-        return self._call_model(promt, num_return_sequences=1)
+    def generate_joke(self, promt=""):
+        return super().generate_joke(self.model, promt)
 
 
-class TestABGenerator(JokeGenerator):
+class TestABGenerator(AbstractJokeGenerator):
+    """Joke generator for a/b testing.
+    Outputs the joke from either of models/datasets.
+    Chooses the source randomly."""
     def __init__(self, dataset_paths, model_paths, max_joke_len=40, jokes_buffer_size=16, model_device='cpu'):
         """
         Loads datasets and models. Initiates pools and orders of passing
-        :param datasets:
-        :param model_paths:
+        :param dataset_paths: paths to the dataset
+        :param model_paths: paths to the model
         """
-        self.jokes_buffer_size = jokes_buffer_size
+        super().__init__(jokes_buffer_size)
 
-        dataset_keys = [f"dataset{i}" for i in range(len(dataset_paths))]
-        model_keys = [f"model{i}" for i in range(len(model_paths))]
-
-        self.key2model = dict()
+        self.models = list()
         self.key2pool = dict()
-        for key, path in zip(model_keys, model_paths):
-            self.key2model[key] = ModelWrapper(path, max_length=max_joke_len)
-            self.__fill_jokes_buffer(key)
+        for model_path in model_paths:
+            model_name = os.path.split(model_path)[1]
+            self.models.append(ModelWrapper(model_path, model_name, max_length=max_joke_len))
+            self._fill_jokes_buffer(self.models[-1])
 
-        self.key2dataset = dict()
-        for key, path in zip(dataset_keys, dataset_paths):
-            self.key2dataset[key] = Dataset(path)
+        self.datasets = [Dataset(path) for path in dataset_paths]
+        self.num_of_pools = len(self.models) + len(self.datasets)
 
-        self.dataset_keys = cycle(dataset_keys)
-        self.model_keys = cycle(model_keys)
-        # which source to use: True - dataset, False - next model's pool
-        self.use_dataset = cycle([True, False])
-
-        self.store = storage
-
+    @synchronized
     def generate_joke(self, promt=""):
-        if promt:
-            key, joke_text = self.__continue_joke(self.custom_promt.format(promt))
-        else:
-            key, joke_text = self.__get_joke_from_buffer()
-        joke_text = self._prettify_result(joke_text)
-        joke_id = self.store.add_joke(joke_text, generated_by=key)
-        return Joke(id=joke_id, text=joke_text)
+        idx = random.randint(0, len(self.models) - 1)
+        model = self.models[idx]
+        return super().generate_joke(model, promt)
 
     @synchronized
-    def __continue_joke(self, promt):
-        model_key = next(self.model_keys)
-        return model_key, self._call_model(model_key, promt, num_return_sequences=1)
+    def _fill_jokes_buffer(self, model):
+        self.key2pool[model.name] = super()._fill_jokes_buffer(model)
 
     @synchronized
-    def _call_model(self, model_key, prompt, num_return_sequences):
-        """Generate the joke using the given model."""
-        return self.key2model[model_key].generate(prompt, num_return_sequences)
-
-    @synchronized
-    def __fill_jokes_buffer(self, model_key):
-        self.key2pool[model_key] = self._call_model(model_key,
-                                                    self.default_promt_token,
-                                                    num_return_sequences=self.jokes_buffer_size)
-
-    @synchronized
-    def __get_joke_from_buffer(self):
-        """
-        From one of datasets or from one of models
-        """
-        if next(self.use_dataset):
-            key = next(self.dataset_keys)
-            joke = random.choice(self.key2dataset[key])
-        else:
-            key = next(self.model_keys)
-            if len(self.key2pool[key]) == 0:
-                self.__fill_jokes_buffer(key)
-            joke = self.key2pool[key].pop()
-        return key, joke
+    def _get_joke_from_buffer(self):
+        idx = random.randint(0, self.num_of_pools - 1)
+        res = {}
+        if idx < len(self.datasets):
+            print(f'[INFO] generate - Dataset: {self.datasets[idx].name}')
+            return random.choice(self.datasets[idx])
+        idx = idx - len(self.datasets) - 1
+        key = self.models[idx].name
+        print(f'[INFO] generate - Model: {key}')
+        if len(self.key2pool[key]) == 0:
+            self._fill_jokes_buffer(self.models[idx])
+        return self.key2pool[key].pop()
 
 
 class Dataset:
-    """Wrapper for the DataFrame to return values similar to model output."""
+    """Wrapper for the DataFrame to return values similar 
+    to `AbstractJokeGenerator` output.
+    """
 
     def __init__(self, dataset_path):
+        self.name = os.path.split(dataset_path)[1]
         self.data = pd.read_csv(dataset_path)
 
     def __getitem__(self, idx):
         question = self.data['Question'].iloc[idx].strip()
         answer = self.data['Answer'].iloc[idx].strip()
-        return (JokeGenerator.default_promt_token
+        text = (JokeGenerator.default_promt_token
                 + question + '\n'
                 + JokeGenerator.answer_token + ' '
                 + answer)
+        return {
+            'text': text,
+            'generated_by': self.name,
+        }
 
     def __len__(self):
         return len(self.data)
 
 
 if __name__ == '__main__':
-    def readlines(filename):
-        with open(filename, 'r', encoding='utf-8') as f:
-            return f.readlines()
 
-    datasets = [Dataset("data/qa_jokes.csv")]
+    datasets = ["data/qa_jokes.csv"]
     models = ["train/models/output_6"]
 
     gen = TestABGenerator(datasets, models)

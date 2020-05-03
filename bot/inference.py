@@ -25,8 +25,8 @@ MODEL_CLASSES = {
 }
 
 
-class ModelWrapper(object):
-    def __init__(self, model_path,
+class ModelWrapper:
+    def __init__(self, model_path, model_name,
                  device='cpu',
                  model_type='gpt2',
                  max_length=40,
@@ -45,6 +45,7 @@ class ModelWrapper(object):
         model_class, tokenizer_class = MODEL_CLASSES[model_type]
         self.tokenizer = tokenizer_class.from_pretrained(model_path)
         self.model = model_class.from_pretrained(model_path)
+        self.name = model_name
         self.model.to(device)
 
     def __encode(self, text):
@@ -70,11 +71,7 @@ class ModelWrapper(object):
         # Remove the batch dimension when returning multiple sequences
         if len(output_sequences.shape) > 2:
             output_sequences.squeeze_()
-        if num_return_sequences == 1:
-            generated_sequence = output_sequences[0].tolist()
-            return self.tokenizer.decode(generated_sequence, clean_up_tokenization_spaces=True)
-        else:
-            return [self.tokenizer.decode(j, clean_up_tokenization_spaces=True) for j in output_sequences]
+        return [self.tokenizer.decode(j, clean_up_tokenization_spaces=True) for j in output_sequences]
 
 
 if __name__ == '__main__':
