@@ -20,20 +20,20 @@ cfg = ConfigParser()
 cfg.read(os.path.join(os.path.dirname(__file__), 'bot.cfg'))
 
 model_cfg = cfg['model']
-# joke_generator = JokeGenerator(model_path=model_cfg['model_path'],
-#                                max_joke_len=int(model_cfg['max_joke_len']),
-#                                jokes_buffer_size=int(model_cfg['buffer_size']),
-#                                model_device=model_cfg['device']
-#                               )
-
 model_paths = model_cfg['model_paths'].split(',')
 dataset_paths = model_cfg['dataset_paths'].split(',')
-joke_generator = TestABGenerator(dataset_paths=dataset_paths,
-                                 model_paths=model_paths,
-                                 max_joke_len=int(model_cfg['max_joke_len']),
-                                 jokes_buffer_size=int(model_cfg['buffer_size']),
-                                 model_device=model_cfg['device']
-                                )
+model_args = {
+    'max_joke_len': int(model_cfg['max_joke_len']),
+    'jokes_buffer_size': int(model_cfg['buffer_size']),
+    'model_device': model_cfg['device']
+}
+if cfg['bot']['ab_test'].lower() == 'true':
+    joke_generator = TestABGenerator(dataset_paths=dataset_paths,
+                                    model_paths=model_paths,
+                                    **model_args
+                                    )
+else:
+    joke_generator = JokeGenerator(model_path=model_paths[0], **model_args)
 
 splitter = "::"
 pos = "1"

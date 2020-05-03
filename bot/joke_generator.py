@@ -135,7 +135,7 @@ class JokeGenerator(AbstractJokeGenerator):
     def _get_joke_from_buffer(self):
         if len(self.jokes_buffer) == 0:
             self._fill_jokes_buffer()
-        return buffer.pop()
+        return self.jokes_buffer.pop()
 
     @synchronized
     def generate_joke(self, promt=""):
