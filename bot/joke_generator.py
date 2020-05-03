@@ -17,7 +17,7 @@ def synchronized(func):
 
 class JokeGenerator(object):
     default_promt_token = '[QUESTION] '
-    answer_token = '[ANSWER] '
+    answer_token = '[ANSWER]'
     stop_token = '<|endoftext|>'
     POS_GRADE = 1
     NEG_GRADE = -1
@@ -34,7 +34,7 @@ class JokeGenerator(object):
         # Remove all text after the stop token
         text = text[: text.find(self.stop_token) if self.stop_token else None]
         text = text.replace(self.default_promt_token, '<b>Question:</b> ')
-        text = text.replace(self.answer_token, '\n<b>Answer:</b> ')
+        text = text.replace(self.answer_token, '\n<b>Answer:</b>')
         # TODO: Delete multiple answers / inform user about the input format.
         return text
 
