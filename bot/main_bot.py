@@ -4,7 +4,7 @@ from functools import wraps
 from configparser import ConfigParser
 
 import telegram
-from joke_generator import JokeGenerator
+from joke_generator import JokeGenerator, TestABGenerator
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ChatAction
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 
@@ -20,10 +20,20 @@ cfg = ConfigParser()
 cfg.read(os.path.join(os.path.dirname(__file__), 'bot.cfg'))
 
 model_cfg = cfg['model']
-joke_generator = JokeGenerator(model_path=model_cfg['model_path'],
-                               max_joke_len=int(model_cfg['max_joke_len']),
-                               jokes_buffer_size=int(model_cfg['buffer_size']),
-                               model_device=model_cfg['device'])
+# joke_generator = JokeGenerator(model_path=model_cfg['model_path'],
+#                                max_joke_len=int(model_cfg['max_joke_len']),
+#                                jokes_buffer_size=int(model_cfg['buffer_size']),
+#                                model_device=model_cfg['device']
+#                               )
+
+model_paths = model_cfg['model_paths'].split(',')
+dataset_paths = model_cfg['dataset_paths'].split(',')
+joke_generator = TestABGenerator(dataset_paths=dataset_paths,
+                                 model_paths=model_paths,
+                                 max_joke_len=int(model_cfg['max_joke_len']),
+                                 jokes_buffer_size=int(model_cfg['buffer_size']),
+                                 model_device=model_cfg['device']
+                                )
 
 splitter = "::"
 pos = "1"
@@ -35,24 +45,24 @@ def send_typing_action(func):
 
     @wraps(func)
     def command_func(update, context, *args, **kwargs):
-        context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
+        context.bot.send_chat_action(chat_id=update.effective_message.chat_id,
+                                     action=ChatAction.TYPING)
         return func(update, context,  *args, **kwargs)
 
     return command_func
 
 
+@send_typing_action
 def joke_command_handler(update, context):
-    # update.send_chat_action(chat_id=context, action=telegram.ChatAction.TYPING)
-    # update.message.reply_text("Generating a joke")  # This message not disappears
     general_joke_handler(update, context, promt_text="")
 
 
+@send_typing_action
 def text_handler(update, context):
     question = update.message.text
     general_joke_handler(update, context, question)
 
 
-@send_typing_action
 def general_joke_handler(update, context, promt_text=""):
     joke = joke_generator.generate_joke(promt=promt_text)
     joke_id = joke.id
@@ -93,8 +103,7 @@ def main():
     # Post version 12 this will no longer be necessary
     updater = Updater(cfg['bot']['token'], use_context=True)
 
-    updater.dispatcher.add_handler(
-        CommandHandler('joke', joke_command_handler))
+    updater.dispatcher.add_handler(CommandHandler('joke', joke_command_handler))
     updater.dispatcher.add_handler(CallbackQueryHandler(button_handler))
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CallbackQueryHandler(text_handler))
