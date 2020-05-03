@@ -3,7 +3,7 @@ import datetime
 from peewee import *
 
 db = SqliteDatabase('jokes.db')
-
+default_generated = "unknown"
 
 class BaseModel(Model):
     class Meta:
@@ -14,6 +14,7 @@ class Joke(BaseModel):
     joke_id = AutoField()
     text = CharField(max_length=1024)
     created_date = DateTimeField(default=datetime.datetime.now)
+    generated_by = CharField(max_length=128, default=default_generated)
 
 
 class Vote(BaseModel):
@@ -25,12 +26,13 @@ class Vote(BaseModel):
         primary_key = CompositeKey('joke', 'user_id')
 
 
-def add_joke(text):
+def add_joke(text, generated_by=default_generated):
     """
+    :param generated_by: where this joke came from - modelA/modelB/datasetA...
     :param text: text of joke
     :return: id of registered joke
     """
-    joke = Joke.create(text=text)
+    joke = Joke.create(text=text, generated_by=generated_by)
     return joke.joke_id
 
 
