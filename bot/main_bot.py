@@ -89,7 +89,13 @@ def button_handler(update, context):
 
 
 def start(update, context):
-    update.message.reply_text("Use /joke to generate a joke")
+    update.message.reply_text("Welcome to the *Joke Generator Bot*." +
+                              "\n\nUse `/joke` to generate a joke. " + 
+                              "Or, if you want a joke on some specific topic from me, " +
+                              "just write me a question and I'll answer it in a playful form." +
+                              "\nTo help me learn, please sent feedback on jokes through the 👍/👎 buttons. " +
+                              "\n\n**DISCLAIMER**: This bot is still very dumb and produces a lot of dark and racist humor. " +
+                              "Don't judge him, he learned them from the people", parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def error(update, context):
