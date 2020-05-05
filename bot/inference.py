@@ -51,6 +51,7 @@ class ModelWrapper:
         self.tokenizer = tokenizer_class.from_pretrained(model_path)
         self.model = model_class.from_pretrained(model_path)
         self.name = model_name
+        self.logger = logging.getLogger('ML: ' + self.name)
         self.model.to(device)
 
     def __encode(self, text):

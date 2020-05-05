@@ -1,7 +1,8 @@
-import random
 import os
-import threading
 import re
+import random
+import threading
+import logging
 from itertools import cycle
 from abc import ABC, abstractmethod
 
@@ -68,10 +69,9 @@ class AbstractJokeGenerator(ABC):
         :return: `Joke` object
         """
         if promt:
-            print(f'[INFO] continue - Model: {model.name}')
             res = self._continue_joke(model, promt)
         else:
-            res = self._get_joke_from_buffer()
+            res = self._get_new_joke()
         res['text'] = self._prettify_result(res['text'])
         joke_id = self.store.add_joke(**res)
         return Joke(id=joke_id, text=res['text'])
@@ -92,27 +92,46 @@ class AbstractJokeGenerator(ABC):
         } for seq in model.generate(prompt, num_return_sequences)]
     
     @synchronized
-    def _fill_jokes_buffer(self, model):
-        """Fill the jokes buffer associated with given model.
-        WARNING: Default implementation just returns the result.
+    def _get_from_buffer(self, model, buffer):
+        """Get a joke from the buffer.
+        
+        :param buffer: buffer to get the joke from
+        :param model: model to use to fill the buffer
+        :return: joke from the buffer
+        """
+        model.logger.info('Got joke from the buffer')
+        if len(buffer) == 0:
+            self._fill_buffer(model)
+        return buffer.pop()
+
+    @synchronized
+    @abstractmethod
+    def _fill_buffer(self, model):
+        """Fill the buffer associated with this model."""
+        pass
+    
+    @synchronized
+    def _generate_for_buffer(self, model):
+        """Generates jokes to fill the buffer.
 
         :param model: model to use
         :return: see `__call_model` function
         """
+        model.logger.info('Filling the buffer')
         return self.__call_model(model, self.default_promt_token,
                                 num_return_sequences=self.jokes_buffer_size)
     
     @synchronized
     @abstractmethod
-    def _get_joke_from_buffer(self, model):
-        """Get the new joke from the buffer for given model.
-        If needed update the buffer.
+    def _get_new_joke(self, model):
+        """Get the new joke from the given model.
         """
         pass
     
     @synchronized
     def _continue_joke(self, model, promt):
         """Continue the joke given in promt."""
+        model.logger.info('Continue joke')
         model_promt = self.custom_promt.format(' ' + promt.strip())
         return self.__call_model(model, model_promt, num_return_sequences=1)[0]
 
@@ -122,22 +141,24 @@ class JokeGenerator(AbstractJokeGenerator):
     def __init__(self, model_path, max_joke_len=40, jokes_buffer_size=16, model_device='cpu'):
         super().__init__(jokes_buffer_size)
         model_name = os.path.split(model_path)[1]
+        self.logger = logging.getLogger(type(self).__name__)
+        self.logger.info('Loading models...')
         self.model = ModelWrapper(model_path, model_name, max_length=max_joke_len)
-        self._fill_jokes_buffer()
-
-    @synchronized
-    def _fill_jokes_buffer(self):
-        self.jokes_buffer = super()._fill_jokes_buffer(self.model)
-
-    @synchronized
-    def _get_joke_from_buffer(self):
-        if len(self.jokes_buffer) == 0:
-            self._fill_jokes_buffer()
-        return self.jokes_buffer.pop()
+        self.logger.info(f'Loaded {self.models[-1].name}')
+        self._fill_buffer()
+        self.logger.info('Ready to work!')
 
     @synchronized
     def generate_joke(self, promt=""):
         return super().generate_joke(self.model, promt)
+    
+    @synchronized
+    def _fill_buffer(self, model):
+        self.jokes_buffer = super()._generate_for_buffer(model)
+
+    @synchronized
+    def _get_new_joke(self):
+        return self._get_from_buffer(self.model, self.jokes_buffer)
 
 
 class TestABGenerator(AbstractJokeGenerator):
@@ -153,20 +174,22 @@ class TestABGenerator(AbstractJokeGenerator):
         super().__init__(jokes_buffer_size)
 
         self.models, self.key2pool = list(), dict()
-        print('[INFO] Loading models...')
+        self.logger = logging.getLogger(type(self).__name__)
+        self.logger.info('Loading models...')
         for m_path in model_paths:
             m_name = os.path.split(m_path)[1]
             self.models.append(ModelWrapper(m_path, m_name,
                                             max_length=max_joke_len))
-            self._fill_jokes_buffer(self.models[-1])
-            print(f'[INFO] Loaded {self.models[-1].name}')
+            self.logger.info(f'Loaded {self.models[-1].name}')
+            self._fill_buffer(self.models[-1])
 
-        print('[INFO] Loading datasets...')
+        self.logger.info('Loading datasets...')
         self.datasets = list()
         for d_path in dataset_paths:
             self.datasets.append(Dataset(d_path, self.default_promt_token,
                                          self.answer_token))
-        print('[INFO] Ready to work!')
+            self.logger.info(f'Loaded {self.datasets[-1].name}')
+        self.logger.info('Ready to work!')
         self.num_of_pools = len(self.models) + len(self.datasets)
 
     @synchronized
@@ -174,30 +197,29 @@ class TestABGenerator(AbstractJokeGenerator):
         idx = random.randint(0, len(self.models) - 1)
         model = self.models[idx]
         return super().generate_joke(model, promt)
+    
+    @synchronized
+    def _fill_buffer(self, model):
+        self.key2pool[model.name] = super()._generate_for_buffer(model)
 
     @synchronized
-    def _fill_jokes_buffer(self, model):
-        self.key2pool[model.name] = super()._fill_jokes_buffer(model)
-
-    @synchronized
-    def _get_joke_from_buffer(self):
+    def _get_new_joke(self):
+        """Get the joke either from the model buffer, or dataset."""
         idx = random.randint(0, self.num_of_pools - 1)
-        res = {}
         if idx < len(self.datasets):
-            print(f'[INFO] generate - Dataset: {self.datasets[idx].name}')
             return random.choice(self.datasets[idx])
         idx = idx - len(self.datasets) - 1
         key = self.models[idx].name
-        print(f'[INFO] generate - Model: {key}')
-        if len(self.key2pool[key]) == 0:
-            self._fill_jokes_buffer(self.models[idx])
-        return self.key2pool[key].pop()
+        return self._get_from_buffer(self.models[idx],
+                                     self.key2pool[key])
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        level=logging.INFO)
 
-    datasets = ["data/qa_jokes.csv"]
-    models = ["train/models/output_6"]
+    datasets = ["../data/qa_jokes.csv"]
+    models = ["../train/models/output_8"]
 
     gen = TestABGenerator(datasets, models)
 

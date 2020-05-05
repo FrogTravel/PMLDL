@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from functools import wraps
 from configparser import ConfigParser
 
@@ -11,9 +12,12 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageH
 """
 Basic example for a bot that uses inline keyboards.
 """
-
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+                    level=logging.INFO,
+                    handlers=[
+                              logging.FileHandler("run.log"),
+                              logging.StreamHandler(sys.stdout),
+                    ])
 logger = logging.getLogger(__name__)
 
 cfg = ConfigParser()

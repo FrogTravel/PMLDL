@@ -1,4 +1,5 @@
 import os
+import logging
 import pandas as pd
 
 class Dataset:
@@ -11,12 +12,14 @@ class Dataset:
         self.answer_token = answer_token
         self.name = os.path.split(dataset_path)[1]
         self.data = pd.read_csv(dataset_path)
+        self.logger = logging.getLogger("DS: " + self.name)
 
     def __getitem__(self, idx):
         question = self.data['Question'].iloc[idx].strip()
         answer = self.data['Answer'].iloc[idx].strip()
         text = (self.default_promt_token + question + '\n'
                 + self.answer_token + ' ' + answer)
+        self.logger.info('Got joke from dataset')
         return {
             'text': text,
             'generated_by': self.name,
