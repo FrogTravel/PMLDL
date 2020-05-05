@@ -4,15 +4,15 @@ import threading
 import re
 from itertools import cycle
 
-import pandas as pd
 import storage
 from inference import ModelWrapper
-from joke import Joke
+from data import Dataset, Joke
 
 from abc import ABC, abstractmethod
 
 
 def synchronized(func):
+    """Decorator for the syncronized usage of the function."""
     func.__lock__ = threading.Lock()
 
     def synced_func(*args, **kws):
@@ -154,8 +154,7 @@ class TestABGenerator(AbstractJokeGenerator):
         """
         super().__init__(jokes_buffer_size)
 
-        self.models = list()
-        self.key2pool = dict()
+        self.models, self.key2pool = list(), dict()
         for model_path in model_paths:
             model_name = os.path.split(model_path)[1]
             self.models.append(ModelWrapper(model_path, model_name, max_length=max_joke_len))
@@ -187,31 +186,6 @@ class TestABGenerator(AbstractJokeGenerator):
         if len(self.key2pool[key]) == 0:
             self._fill_jokes_buffer(self.models[idx])
         return self.key2pool[key].pop()
-
-
-class Dataset:
-    """Wrapper for the DataFrame to return values similar 
-    to `AbstractJokeGenerator` output.
-    """
-
-    def __init__(self, dataset_path):
-        self.name = os.path.split(dataset_path)[1]
-        self.data = pd.read_csv(dataset_path)
-
-    def __getitem__(self, idx):
-        question = self.data['Question'].iloc[idx].strip()
-        answer = self.data['Answer'].iloc[idx].strip()
-        text = (JokeGenerator.default_promt_token
-                + question + '\n'
-                + JokeGenerator.answer_token + ' '
-                + answer)
-        return {
-            'text': text,
-            'generated_by': self.name,
-        }
-
-    def __len__(self):
-        return len(self.data)
 
 
 if __name__ == '__main__':
