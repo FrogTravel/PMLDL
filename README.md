@@ -17,6 +17,17 @@ python3 bot\main_bot.py
 ```
 And you have a working bot!
 
+All dispatched jokes will be stored in `jokes.db` with the feedback in a `vote` table.
+
+Also, you can see the run log in stdout and `run.log` file.
+
+### A/B Testing
+For the purpose of testing the quality of our bot we added the ability to test the models against the jokes from datasets.
+
+To do this, change the flag `ab_test` in configuration file to `true` and add the wanted model paths and dataset paths to corresponding fields with the `,` as delimeter.
+
+The bot will randomly choose the sourse for the next joke and will put the model/dataset path in `generated_by` column in database.
+
 ## How to train a model
 To train the model, we have three datasets:
 * **QA Jokes** (3.29 MB) - the original dataset we've found on [Kaggle][1]. It contains ~38k question-answer jokes
@@ -62,7 +73,9 @@ Feel free to experiment with the `temperature`, `k`, `p` and `repetition_penalty
 
 
 [1]: https://www.kaggle.com/jiriroz/qa-jokes "QA Jokes dataset"
+
 [2]: https://www.kaggle.com/abhinavmoudgil95/short-jokes "Short Jokes dataset"
+
 [3]: https://render.githubusercontent.com/view/scrapsfromtheloft.com "Stand Up transcripts site"
 
 [4]: https://github.com/huggingface/transformers/blob/master/examples/run_language_modeling.py "Transformers. Run language model example"
