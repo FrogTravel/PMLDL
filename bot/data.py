@@ -1,23 +1,22 @@
 import os
 import pandas as pd
-from joke_generator import JokeGenerator
 
 class Dataset:
     """Wrapper for the DataFrame to return values similar 
     to `AbstractJokeGenerator` output.
     """
 
-    def __init__(self, dataset_path):
+    def __init__(self, dataset_path, default_promt_token, answer_token):
+        self.default_promt_token = default_promt_token
+        self.answer_token = answer_token
         self.name = os.path.split(dataset_path)[1]
         self.data = pd.read_csv(dataset_path)
 
     def __getitem__(self, idx):
         question = self.data['Question'].iloc[idx].strip()
         answer = self.data['Answer'].iloc[idx].strip()
-        text = (JokeGenerator.default_promt_token
-                + question + '\n'
-                + JokeGenerator.answer_token + ' '
-                + answer)
+        text = (self.default_promt_token + question + '\n'
+                + self.answer_token + ' ' + answer)
         return {
             'text': text,
             'generated_by': self.name,

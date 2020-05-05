@@ -3,13 +3,11 @@ import os
 import threading
 import re
 from itertools import cycle
+from abc import ABC, abstractmethod
 
 import storage
 from inference import ModelWrapper
 from data import Dataset, Joke
-
-from abc import ABC, abstractmethod
-
 
 def synchronized(func):
     """Decorator for the syncronized usage of the function."""
@@ -155,12 +153,20 @@ class TestABGenerator(AbstractJokeGenerator):
         super().__init__(jokes_buffer_size)
 
         self.models, self.key2pool = list(), dict()
-        for model_path in model_paths:
-            model_name = os.path.split(model_path)[1]
-            self.models.append(ModelWrapper(model_path, model_name, max_length=max_joke_len))
+        print('[INFO] Loading models...')
+        for m_path in model_paths:
+            m_name = os.path.split(m_path)[1]
+            self.models.append(ModelWrapper(m_path, m_name,
+                                            max_length=max_joke_len))
             self._fill_jokes_buffer(self.models[-1])
+            print(f'[INFO] Loaded {self.models[-1].name}')
 
-        self.datasets = [Dataset(path) for path in dataset_paths]
+        print('[INFO] Loading datasets...')
+        self.datasets = list()
+        for d_path in dataset_paths:
+            self.datasets.append(Dataset(d_path, self.default_promt_token,
+                                         self.answer_token))
+        print('[INFO] Ready to work!')
         self.num_of_pools = len(self.models) + len(self.datasets)
 
     @synchronized
