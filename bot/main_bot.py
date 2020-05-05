@@ -39,6 +39,17 @@ splitter = "::"
 pos = "1"
 neg = "2"
 
+GREETING_MESSAGE = "Welcome to the *Joke Generator Bot*."
+
+HELP_MESSAGE = "Use `/joke` to generate a joke. " + \
+               "Or, if you want a joke on some specific topic from me, " + \
+               "just write me a question and I'll answer it in a playful form." + \
+                "\n\nTo help me learn, please sent feedback on jokes through the 👍/👎 buttons."
+
+DISCLAIMER_MESSAGE = "**DISCLAIMER**: This bot is still very dumb and " + \
+                     "produces a lot of dark and racist humor. " + \
+                     "Don't judge him, he learned them from the people"
+
 
 def send_typing_action(func):
     """Sends typing action while processing func command."""
@@ -89,14 +100,14 @@ def button_handler(update, context):
 
 
 def start(update, context):
-    update.message.reply_text("Welcome to the *Joke Generator Bot*." +
-                              "\n\nUse `/joke` to generate a joke. " + 
-                              "Or, if you want a joke on some specific topic from me, " +
-                              "just write me a question and I'll answer it in a playful form." +
-                              "\nTo help me learn, please sent feedback on jokes through the 👍/👎 buttons. " +
-                              "\n\n**DISCLAIMER**: This bot is still very dumb and produces a lot of dark and racist humor. " +
-                              "Don't judge him, he learned them from the people", parse_mode=telegram.ParseMode.MARKDOWN)
+    update.message.reply_text(GREETING_MESSAGE + '\n\n' 
+                             + HELP_MESSAGE + '\n\n' + 
+                             DISCLAIMER_MESSAGE, parse_mode=telegram.ParseMode.MARKDOWN)
 
+
+def help(update, context):
+    update.message.reply_text(HELP_MESSAGE + '\n\n' + DISCLAIMER_MESSAGE,
+                              parse_mode=telegram.ParseMode.MARKDOWN)
 
 def error(update, context):
     """Log Errors caused by Updates."""
@@ -112,6 +123,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('joke', joke_command_handler))
     updater.dispatcher.add_handler(CallbackQueryHandler(button_handler))
     updater.dispatcher.add_handler(CommandHandler('start', start))
+    updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_handler(CallbackQueryHandler(text_handler))
     updater.dispatcher.add_error_handler(error)
     updater.dispatcher.add_handler(MessageHandler(Filters.text, text_handler))
