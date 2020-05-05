@@ -19,15 +19,15 @@ And you have a working bot!
 
 ## How to train a model
 To train the model, we have three datasets:
-* **QA Jokes** (3.29 MB) - the original dataset we've found on Kaggle [1]. It contains ~38k question-answer jokes
-* **Short Jokes** (22.8 MB) - the biggest dataset in our collection, it was also found on Kaggle [2] and consists of ~231k short length jokes from Twitter and Reddit. But it also contains a lot of noise and misspellings
-* **Stand up transcripts** (13.5 MB) - the manually scraped dataset of stand up transcripts from one site [3]
+* **QA Jokes** (3.29 MB) - the original dataset we've found on [Kaggle][1]. It contains ~38k question-answer jokes
+* **Short Jokes** (22.8 MB) - the biggest dataset in our collection, it was also found on [Kaggle][2] and consists of ~231k short length jokes from Twitter and Reddit. But it also contains a lot of noise and misspellings
+* **Stand up transcripts** (13.5 MB) - the manually scraped dataset of stand up transcripts from one [site][3]
 
 But you're free to use others! (and please, write me if you found good one)
 
 For the training, the `GPT-2 train helper.ipynb` in train folder can come in handy. As it can convert the datasets to appropriate GPT-2 input files and extract the QA jokes from the *Short Jokes* dataset.
 
-And as for the actual training use the `run_language_modelling.py` script taken from the Transformers library [4]:
+And as for the actual training use the `run_language_modelling.py` script taken from the [Transformers library][4]:
 ```cmd
 python3 run_language_modeling.py \
     --model_type=gpt2 \
