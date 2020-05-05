@@ -15,8 +15,8 @@ Basic example for a bot that uses inline keyboards.
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO,
                     handlers=[
-                              logging.FileHandler("run.log"),
-                              logging.StreamHandler(sys.stdout),
+                        logging.FileHandler("run.log"),
+                        logging.StreamHandler(sys.stdout),
                     ])
 logger = logging.getLogger(__name__)
 
@@ -33,9 +33,9 @@ model_args = {
 }
 if cfg['bot']['ab_test'].lower() == 'true':
     joke_generator = TestABGenerator(dataset_paths=dataset_paths,
-                                    model_paths=model_paths,
-                                    **model_args
-                                    )
+                                     model_paths=model_paths,
+                                     **model_args
+                                     )
 else:
     joke_generator = JokeGenerator(model_path=model_paths[0], **model_args)
 
@@ -48,7 +48,7 @@ GREETING_MESSAGE = "Welcome to the *Joke Generator Bot*."
 HELP_MESSAGE = "Use `/joke` to generate a joke. " + \
                "Or, if you want a joke on some specific topic from me, " + \
                "just write me a question and I'll answer it in a playful form." + \
-                "\n\nTo help me learn, please sent feedback on jokes through the 👍/👎 buttons."
+               "\n\nTo help me learn, please sent feedback on jokes through the 👍/👎 buttons."
 
 DISCLAIMER_MESSAGE = "**DISCLAIMER**: This bot is still very dumb and " + \
                      "produces a lot of dark and racist humor. " + \
@@ -103,15 +103,16 @@ def button_handler(update, context):
     context.bot.answer_callback_query(query.id, "Thank you for your feedback")
 
 
-def start(update, context):
-    update.message.reply_text(GREETING_MESSAGE + '\n\n' 
-                             + HELP_MESSAGE + '\n\n' + 
-                             DISCLAIMER_MESSAGE, parse_mode=telegram.ParseMode.MARKDOWN)
+def start_handler(update, context):
+    update.message.reply_text(GREETING_MESSAGE + '\n\n'
+                              + HELP_MESSAGE + '\n\n' +
+                              DISCLAIMER_MESSAGE, parse_mode=telegram.ParseMode.MARKDOWN)
 
 
-def help(update, context):
+def help_handler(update, context):
     update.message.reply_text(HELP_MESSAGE + '\n\n' + DISCLAIMER_MESSAGE,
                               parse_mode=telegram.ParseMode.MARKDOWN)
+
 
 def error(update, context):
     """Log Errors caused by Updates."""
@@ -126,8 +127,8 @@ def main():
 
     updater.dispatcher.add_handler(CommandHandler('joke', joke_command_handler))
     updater.dispatcher.add_handler(CallbackQueryHandler(button_handler))
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('help', help))
+    updater.dispatcher.add_handler(CommandHandler('start', start_handler))
+    updater.dispatcher.add_handler(CommandHandler('help', help_handler))
     updater.dispatcher.add_handler(CallbackQueryHandler(text_handler))
     updater.dispatcher.add_error_handler(error)
     updater.dispatcher.add_handler(MessageHandler(Filters.text, text_handler))

@@ -30,6 +30,7 @@ logging.getLogger("transformers.tokenization_utils").setLevel(logging.ERROR)
 logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
 logging.getLogger("transformers.configuration_utils").setLevel(logging.ERROR)
 
+
 class ModelWrapper:
     def __init__(self, model_path, model_name,
                  device='cpu',

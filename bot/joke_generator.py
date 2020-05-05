@@ -10,6 +10,7 @@ import storage
 from inference import ModelWrapper
 from data import Dataset, Joke
 
+
 def synchronized(func):
     """Decorator for the syncronized usage of the function."""
     func.__lock__ = threading.Lock()
@@ -19,6 +20,7 @@ def synchronized(func):
             return func(*args, **kws)
 
     return synced_func
+
 
 class AbstractJokeGenerator(ABC):
     """Abstract class for joke generation using `ModelWrapper`."""
@@ -41,7 +43,7 @@ class AbstractJokeGenerator(ABC):
     def negative_grade(self, user_id, joke_id):
         self.store.add_or_update_vote(
             joke_id=joke_id, user_id=user_id, rating=self.NEG_GRADE)
-    
+
     def _prettify_result(self, model_output):
         def pp_answer(text):
             """Pretty-print the answer."""
@@ -62,7 +64,7 @@ class AbstractJokeGenerator(ABC):
     @synchronized
     def generate_joke(self, model, promt=""):
         """Generate the joke from given promt.
-        
+
         :param model: model to use to generate joke.
         :param promt: (optional) promt for a joke, if not given
         generates the whole joke
@@ -75,7 +77,7 @@ class AbstractJokeGenerator(ABC):
         res['text'] = self._prettify_result(res['text'])
         joke_id = self.store.add_joke(**res)
         return Joke(id=joke_id, text=res['text'])
-    
+
     @synchronized
     def __call_model(self, model, prompt, num_return_sequences):
         """Call the model to generate the joke.
@@ -90,11 +92,11 @@ class AbstractJokeGenerator(ABC):
             'generated_by': model.name,
             'text': seq
         } for seq in model.generate(prompt, num_return_sequences)]
-    
+
     @synchronized
     def _get_from_buffer(self, model, buffer):
         """Get a joke from the buffer.
-        
+
         :param buffer: buffer to get the joke from
         :param model: model to use to fill the buffer
         :return: joke from the buffer
@@ -109,7 +111,7 @@ class AbstractJokeGenerator(ABC):
     def _fill_buffer(self, model):
         """Fill the buffer associated with this model."""
         pass
-    
+
     @synchronized
     def _generate_for_buffer(self, model):
         """Generates jokes to fill the buffer.
@@ -119,21 +121,22 @@ class AbstractJokeGenerator(ABC):
         """
         model.logger.info('Filling the buffer')
         return self.__call_model(model, self.default_promt_token,
-                                num_return_sequences=self.jokes_buffer_size)
-    
+                                 num_return_sequences=self.jokes_buffer_size)
+
     @synchronized
     @abstractmethod
     def _get_new_joke(self, model):
         """Get the new joke from the given model.
         """
         pass
-    
+
     @synchronized
     def _continue_joke(self, model, promt):
         """Continue the joke given in promt."""
         model.logger.info('Continue joke')
         model_promt = self.custom_promt.format(' ' + promt.strip())
         return self.__call_model(model, model_promt, num_return_sequences=1)[0]
+
 
 class JokeGenerator(AbstractJokeGenerator):
     """Simple Joke generator using one model."""
@@ -151,7 +154,7 @@ class JokeGenerator(AbstractJokeGenerator):
     @synchronized
     def generate_joke(self, promt=""):
         return super().generate_joke(self.model, promt)
-    
+
     @synchronized
     def _fill_buffer(self, model):
         self.jokes_buffer = super()._generate_for_buffer(model)
@@ -164,8 +167,11 @@ class JokeGenerator(AbstractJokeGenerator):
 class TestABGenerator(AbstractJokeGenerator):
     """Joke generator for a/b testing.
     Outputs the joke from either of models/datasets.
-    Chooses the source randomly."""
-    def __init__(self, dataset_paths, model_paths, max_joke_len=40, jokes_buffer_size=16, model_device='cpu'):
+    Chooses the source randomly.
+    """
+
+    def __init__(self, dataset_paths, model_paths, max_joke_len=40,
+                 jokes_buffer_size=16, model_device='cpu'):
         """
         Loads datasets and models. Initiates pools and orders of passing
         :param dataset_paths: paths to the dataset
@@ -197,7 +203,7 @@ class TestABGenerator(AbstractJokeGenerator):
         idx = random.randint(0, len(self.models) - 1)
         model = self.models[idx]
         return super().generate_joke(model, promt)
-    
+
     @synchronized
     def _fill_buffer(self, model):
         self.key2pool[model.name] = super()._generate_for_buffer(model)

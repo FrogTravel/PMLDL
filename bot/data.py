@@ -2,6 +2,7 @@ import os
 import logging
 import pandas as pd
 
+
 class Dataset:
     """Wrapper for the DataFrame to return values similar 
     to `AbstractJokeGenerator` output.
@@ -28,8 +29,10 @@ class Dataset:
     def __len__(self):
         return len(self.data)
 
+
 class Joke:
     """An interface class for a Joke."""
+
     def __init__(self, text, id):
         self.id = id
         self.text = text
