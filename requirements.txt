@@ -1,0 +1,5 @@
+numpy
+pandas
+python-telegram-bot
+peewee
+transformers
