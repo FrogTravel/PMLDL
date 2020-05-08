@@ -3,7 +3,6 @@ import re
 import random
 import threading
 import logging
-from itertools import cycle
 from abc import ABC, abstractmethod
 
 import storage
@@ -61,7 +60,6 @@ class AbstractJokeGenerator(ABC):
         else:
             return [pp_answer(ans) for ans in model_output]
 
-    @synchronized
     def generate_joke(self, model, promt=""):
         """Generate the joke from given promt.
 
@@ -123,7 +121,6 @@ class AbstractJokeGenerator(ABC):
         return self.__call_model(model, self.default_promt_token,
                                  num_return_sequences=self.jokes_buffer_size)
 
-    @synchronized
     @abstractmethod
     def _get_new_joke(self, model):
         """Get the new joke from the given model.
@@ -151,7 +148,6 @@ class JokeGenerator(AbstractJokeGenerator):
         self._fill_buffer()
         self.logger.info('Ready to work!')
 
-    @synchronized
     def generate_joke(self, promt=""):
         return super().generate_joke(self.model, promt)
 
@@ -159,7 +155,6 @@ class JokeGenerator(AbstractJokeGenerator):
     def _fill_buffer(self, model):
         self.jokes_buffer = super()._generate_for_buffer(model)
 
-    @synchronized
     def _get_new_joke(self):
         return self._get_from_buffer(self.model, self.jokes_buffer)
 
@@ -198,7 +193,6 @@ class TestABGenerator(AbstractJokeGenerator):
         self.logger.info('Ready to work!')
         self.num_of_pools = len(self.models) + len(self.datasets)
 
-    @synchronized
     def generate_joke(self, promt=""):
         idx = random.randint(0, len(self.models) - 1)
         model = self.models[idx]
@@ -208,7 +202,6 @@ class TestABGenerator(AbstractJokeGenerator):
     def _fill_buffer(self, model):
         self.key2pool[model.name] = super()._generate_for_buffer(model)
 
-    @synchronized
     def _get_new_joke(self):
         """Get the joke either from the model buffer, or dataset."""
         idx = random.randint(0, self.num_of_pools - 1)
