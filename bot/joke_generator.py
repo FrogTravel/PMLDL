@@ -31,9 +31,9 @@ class AbstractJokeGenerator(ABC):
     POS_GRADE = 1
     NEG_GRADE = -1
 
-    def __init__(self, jokes_buffer_size):
+    def __init__(self, buffer_size):
         self.store = storage
-        self.jokes_buffer_size = jokes_buffer_size
+        self.buffer_size = buffer_size
 
     def positive_grade(self, user_id, joke_id):
         self.store.add_or_update_vote(
@@ -119,7 +119,7 @@ class AbstractJokeGenerator(ABC):
         """
         model.logger.info('Filling the buffer')
         return self.__call_model(model, self.default_promt_token,
-                                 num_return_sequences=self.jokes_buffer_size)
+                                 num_return_sequences=self.buffer_size)
 
     @abstractmethod
     def _get_new_joke(self, model):
@@ -138,12 +138,12 @@ class AbstractJokeGenerator(ABC):
 class JokeGenerator(AbstractJokeGenerator):
     """Simple Joke generator using one model."""
 
-    def __init__(self, model_path, max_joke_len=40, jokes_buffer_size=16, model_device='cpu'):
-        super().__init__(jokes_buffer_size)
+    def __init__(self, model_path, max_len=40, buffer_size=16, model_device='cpu'):
+        super().__init__(buffer_size)
         model_name = os.path.split(model_path)[1]
         self.logger = logging.getLogger(type(self).__name__)
         self.logger.info('Loading models...')
-        self.model = ModelWrapper(model_path, model_name, max_length=max_joke_len)
+        self.model = ModelWrapper(model_path, model_name, max_length=max_len)
         self.logger.info(f'Loaded {self.models[-1].name}')
         self._fill_buffer()
         self.logger.info('Ready to work!')
@@ -165,22 +165,21 @@ class TestABGenerator(AbstractJokeGenerator):
     Chooses the source randomly.
     """
 
-    def __init__(self, dataset_paths, model_paths, max_joke_len=40,
-                 jokes_buffer_size=16, model_device='cpu'):
+    def __init__(self, dataset_paths, model_paths, max_len=40,
+                 buffer_size=16, model_device='cpu'):
         """
         Loads datasets and models. Initiates pools and orders of passing
         :param dataset_paths: paths to the dataset
         :param model_paths: paths to the model
         """
-        super().__init__(jokes_buffer_size)
+        super().__init__(buffer_size)
 
         self.models, self.key2pool = list(), dict()
         self.logger = logging.getLogger(type(self).__name__)
         self.logger.info('Loading models...')
         for m_path in model_paths:
             m_name = os.path.split(m_path)[1]
-            self.models.append(ModelWrapper(m_path, m_name,
-                                            max_length=max_joke_len))
+            self.models.append(ModelWrapper(m_path, m_name, max_length=max_len))
             self.logger.info(f'Loaded {self.models[-1].name}')
             self._fill_buffer(self.models[-1])
 

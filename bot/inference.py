@@ -35,7 +35,7 @@ class ModelWrapper:
     def __init__(self, model_path, model_name,
                  device='cpu',
                  model_type='gpt2',
-                 max_length=40,
+                 max_len=40,
                  temperature=0.9,
                  num_return_sequences=1,
                  repetition_penalty=1.0,
@@ -47,7 +47,7 @@ class ModelWrapper:
         self.p = p
         self.temperature = temperature
         self.device = device = torch.device(device)
-        self.max_length = max_length
+        self.max_length = max_len
         model_class, tokenizer_class = MODEL_CLASSES[model_type]
         self.tokenizer = tokenizer_class.from_pretrained(model_path)
         self.model = model_class.from_pretrained(model_path)

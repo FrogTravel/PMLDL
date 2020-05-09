@@ -27,8 +27,8 @@ model_cfg = cfg['model']
 model_paths = model_cfg['model_paths'].split(',')
 dataset_paths = model_cfg['dataset_paths'].split(',')
 model_args = {
-    'max_joke_len': int(model_cfg['max_joke_len']),
-    'jokes_buffer_size': int(model_cfg['buffer_size']),
+    'max_len': int(model_cfg['max_joke_len']),
+    'buffer_size': int(model_cfg['buffer_size']),
     'model_device': model_cfg['device']
 }
 if cfg['bot']['ab_test'].lower() == 'true':
