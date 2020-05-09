@@ -8,8 +8,8 @@ class Dataset:
     to `AbstractJokeGenerator` output.
     """
 
-    def __init__(self, dataset_path, default_promt_token, answer_token):
-        self.default_promt_token = default_promt_token
+    def __init__(self, dataset_path, promt_token, answer_token):
+        self.promt_token = promt_token
         self.answer_token = answer_token
         self.name = os.path.split(dataset_path)[1]
         self.data = pd.read_csv(dataset_path)
@@ -18,7 +18,7 @@ class Dataset:
     def __getitem__(self, idx):
         question = self.data['Question'].iloc[idx].strip()
         answer = self.data['Answer'].iloc[idx].strip()
-        text = (self.default_promt_token + question + '\n'
+        text = (self.promt_token + question + '\n'
                 + self.answer_token + ' ' + answer)
         self.logger.info('Got joke from dataset')
         return {

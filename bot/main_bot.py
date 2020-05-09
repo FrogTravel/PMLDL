@@ -29,15 +29,15 @@ dataset_paths = model_cfg['dataset_paths'].split(',')
 model_args = {
     'max_len': int(model_cfg['max_joke_len']),
     'buffer_size': int(model_cfg['buffer_size']),
-    'model_device': model_cfg['device']
+    'device': model_cfg['device']
 }
 if cfg['bot']['ab_test'].lower() == 'true':
     joke_generator = TestABGenerator(dataset_paths=dataset_paths,
                                      model_paths=model_paths,
-                                     **model_args
+                                     config=model_args
                                      )
 else:
-    joke_generator = JokeGenerator(model_path=model_paths[0], **model_args)
+    joke_generator = JokeGenerator(model_path=model_paths[0], config=model_args)
 
 splitter = "::"
 pos = "1"
@@ -87,8 +87,8 @@ def general_joke_handler(update, context, promt_text=""):
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    update.message.reply_text(
-        joke.text, reply_markup=reply_markup, parse_mode=telegram.ParseMode.HTML)
+    update.message.reply_text(joke.text, reply_markup=reply_markup,
+                              parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def button_handler(update, context):
