@@ -5,7 +5,7 @@ from functools import wraps
 from configparser import ConfigParser
 
 import telegram
-from joke_generator import JokeGenerator, TestABGenerator
+from joke_generator import JokeGenerator, TestABGenerator, RussianModelWrapper
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ChatAction
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 
@@ -38,6 +38,12 @@ if cfg['bot']['ab_test'].lower() == 'true':
                                      )
 else:
     joke_generator = JokeGenerator(model_path=model_paths[0], config=model_args)
+
+if model_cfg.get('rus_model_path'):
+    joke_generator = RussianModelWrapper(eng_model=joke_generator,
+                                         rus_model_path=model_cfg.get('rus_model_path'),
+                                         config=model_args
+                                        )
 
 splitter = "::"
 pos = "1"

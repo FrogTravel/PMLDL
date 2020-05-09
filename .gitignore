@@ -229,6 +229,7 @@ model
 train/runs
 train/output*
 train/models
+train/ru_gpt2
 # prep files
 data/prep
 # jokes database

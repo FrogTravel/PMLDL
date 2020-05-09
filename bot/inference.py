@@ -16,9 +16,11 @@ from transformers import (
     XLNetLMHeadModel,
     XLNetTokenizer,
 )
+from yt_encoder import YTEncoder
 
 MODEL_CLASSES = {
     "gpt2": (GPT2LMHeadModel, GPT2Tokenizer),
+    "gpt2-yttm": (GPT2LMHeadModel, YTEncoder),
     "ctrl": (CTRLLMHeadModel, CTRLTokenizer),
     "openai-gpt": (OpenAIGPTLMHeadModel, OpenAIGPTTokenizer),
     "xlnet": (XLNetLMHeadModel, XLNetTokenizer),

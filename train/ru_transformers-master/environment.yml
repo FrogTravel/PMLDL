@@ -1,0 +1,36 @@
+name: gpt
+channels:
+  - fastai
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - ipykernel
+  - python
+  - pip
+  - fastai 
+  - pytorch>=1.3
+  - cuda100 
+  - regex
+  - langdetect
+  - tensorboardX
+  - cudatoolkit
+  - tensorboard>=1.14
+  - tensorflow>=2
+  - uvicorn
+  - terraform
+  - google-cloud-sdk
+  - tar 
+  - zstd
+  - transformers
+  - pip:
+    - pyTelegramBotAPI
+    - pysocks
+    - tendo
+    - schedule
+    - fastapi>=0.41
+    - youtokentome
+    - requests
+    - rupo
+    - transitions
+    - mezmorize
