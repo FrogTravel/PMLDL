@@ -66,8 +66,8 @@ class AbstractJokeGenerator(ABC):
             # Escape markdown tokens.
             text = self._escape_markdown(text)
             # Replace model tokens with html formatted ones.
-            text = re.sub(f'\{self.config["promt_token"]} *', '**Question:** ', text)
-            text = re.sub(f'\{self.config["answer_token"]} *', '\n**Answer:** ', text)
+            text = re.sub(f'\{self.config["promt_token"]} *', '*Question*: ', text)
+            text = re.sub(f'\{self.config["answer_token"]} *', '\n*Answer*: ', text)
             return text
 
         if isinstance(model_output, str):
