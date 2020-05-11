@@ -1,6 +1,11 @@
 # Joke Generator Bot
 A Question-Answer joke generator bot for Telegram. As a joke generator we used a fine-tuned GPT-2 model.
 
+<p align="center">
+  <img src="images/greeting.png" alt="Bot greeting message" height="400">
+  <img src="images/answers.png" alt="Jokes example" height="400">
+</p>
+
 **Authors**:
 * Vlad Kuleykin
 * Boris Guryev
@@ -19,7 +24,17 @@ And you have a working bot!
 
 All dispatched jokes will be stored in `jokes.db` with the feedback in a `vote` table.
 
-Also, you can see the run log in stdout and `run.log` file.
+Also, you can see the run log in stdout and `run.log` file:
+
+```log
+2020-05-11 14:40:23,546 - DS: qa_jokes.csv - INFO - Got joke from dataset
+2020-05-11 14:40:25,613 - ML: output_one - INFO - Got joke from the buffer
+2020-05-11 14:40:27,483 - DS: shqa_jokes.csv - INFO - Got joke from dataset
+2020-05-11 14:40:29,205 - ML: output_8 - INFO - Filling the buffer
+2020-05-11 14:40:29,205 - ML: output_8 - INFO - Got joke from the buffer
+```
+Where `DS` stands for the dataset and `ML` stands for the model.
+
 
 ### A/B Testing
 For the purpose of testing the quality of our bot we added the ability to test the models against the jokes from datasets.
