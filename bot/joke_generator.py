@@ -114,15 +114,16 @@ class AbstractJokeGenerator(ABC):
         :param model: model to use to fill the buffer
         :return: joke from the buffer
         """
-        model.logger.info('Got joke from the buffer')
         if len(buffer) == 0:
-            self._fill_buffer(model)
+            buffer = self._fill_buffer(model)
+        model.logger.info('Got joke from the buffer')
         return buffer.pop()
 
     @synchronized
     @abstractmethod
     def _fill_buffer(self, model):
-        """Fill the buffer associated with this model."""
+        """Fill and return the buffer associated with given model.
+        """
         pass
 
     @synchronized
@@ -169,6 +170,7 @@ class JokeGenerator(AbstractJokeGenerator):
     @synchronized
     def _fill_buffer(self, model):
         self.jokes_buffer = super()._generate_for_buffer(model)
+        return self.jokes_buffer
 
     def _get_new_joke(self):
         return self._get_from_buffer(self.model, self.jokes_buffer)
@@ -213,6 +215,7 @@ class TestABGenerator(AbstractJokeGenerator):
     @synchronized
     def _fill_buffer(self, model):
         self.key2pool[model.name] = super()._generate_for_buffer(model)
+        return self.key2pool[model.name]
 
     def _get_new_joke(self):
         """Get the joke either from the model buffer, or dataset."""
