@@ -66,8 +66,8 @@ class AbstractJokeGenerator(ABC):
             # Escape markdown tokens.
             text = self._escape_markdown(text)
             # Replace model tokens with html formatted ones.
-            text = re.sub(f'\{self.config["promt_token"]} *', '**Question:** ', text)
-            text = re.sub(f'\{self.config["answer_token"]} *', '\n**Answer:** ', text)
+            text = re.sub(f'\{self.config["promt_token"]} *', '*Question*: ', text)
+            text = re.sub(f'\{self.config["answer_token"]} *', '\n*Answer*: ', text)
             return text
 
         if isinstance(model_output, str):
@@ -223,6 +223,42 @@ class TestABGenerator(AbstractJokeGenerator):
         key = self.models[idx].name
         return self._get_from_buffer(self.models[idx],
                                      self.key2pool[key])
+
+
+class RussianModelWrapper(AbstractJokeGenerator):
+
+    def __init__(self, eng_model, rus_model_path, config):
+        super().__init__(config)
+        self.eng_model = eng_model
+        config.update({ # Spaces are because of the tokenizer
+            'promt_token': '[ ВОПРОС]',
+            'answer_token': '[ ОТВЕТ]',
+            'custom_promt': '[ ВОПРОС]{}\n[ ОТВЕТ]',
+            'stop_token': '<| endoftext|>',
+            'model_type': 'gpt2-yttm',
+        })
+        self.rus_model = JokeGenerator(rus_model_path, config)
+
+    @staticmethod
+    def cyrillic_ratio(text):
+        return sum(map(len, re.findall('[\u0400-\u04FF]*', text))) / len(text)
+
+    def generate_joke(self, promt=""):
+        """If the ratio of cyrillic symbols if high enough,
+        generate using russian model."""
+        if promt.strip() == '/шутка':
+            return self.rus_model.generate_joke('')
+        if promt and self.cyrillic_ratio(promt) > 0.4:
+            return self.rus_model.generate_joke(promt)
+        return self.eng_model.generate_joke(promt)
+
+    @synchronized
+    def _fill_buffer(self, model):
+        assert False, "Unreachable code. _fill_buffer function in RussianModelWrapper."
+
+    def _get_new_joke(self):
+        """Get the joke from the english model."""
+        return self.eng_model._get_new_joke()
 
 
 if __name__ == '__main__':
