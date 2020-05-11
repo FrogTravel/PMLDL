@@ -2,4 +2,5 @@ numpy
 pandas
 python-telegram-bot
 peewee
+youtokentome
 transformers
