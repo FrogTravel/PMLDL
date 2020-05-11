@@ -1,19 +1,23 @@
 import logging
 import os
+import sys
 from functools import wraps
 from configparser import ConfigParser
 
 import telegram
-from joke_generator import JokeGenerator, TestABGenerator
+from joke_generator import JokeGenerator, TestABGenerator, RussianModelWrapper
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ChatAction
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 
 """
 Basic example for a bot that uses inline keyboards.
 """
-
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+                    level=logging.INFO,
+                    handlers=[
+                        logging.FileHandler("run.log"),
+                        logging.StreamHandler(sys.stdout),
+                    ])
 logger = logging.getLogger(__name__)
 
 cfg = ConfigParser()
@@ -23,21 +27,38 @@ model_cfg = cfg['model']
 model_paths = model_cfg['model_paths'].split(',')
 dataset_paths = model_cfg['dataset_paths'].split(',')
 model_args = {
-    'max_joke_len': int(model_cfg['max_joke_len']),
-    'jokes_buffer_size': int(model_cfg['buffer_size']),
-    'model_device': model_cfg['device']
+    'max_len': int(model_cfg['max_joke_len']),
+    'buffer_size': int(model_cfg['buffer_size']),
+    'device': model_cfg['device']
 }
 if cfg['bot']['ab_test'].lower() == 'true':
     joke_generator = TestABGenerator(dataset_paths=dataset_paths,
-                                    model_paths=model_paths,
-                                    **model_args
-                                    )
+                                     model_paths=model_paths,
+                                     config=model_args
+                                     )
 else:
-    joke_generator = JokeGenerator(model_path=model_paths[0], **model_args)
+    joke_generator = JokeGenerator(model_path=model_paths[0], config=model_args)
+
+if model_cfg.get('rus_model_path'):
+    joke_generator = RussianModelWrapper(eng_model=joke_generator,
+                                         rus_model_path=model_cfg.get('rus_model_path'),
+                                         config=model_args
+                                        )
 
 splitter = "::"
 pos = "1"
 neg = "2"
+
+GREETING_MESSAGE = "Welcome to the _Joke Generator Bot_."
+
+HELP_MESSAGE = "Use `/joke` to generate a joke. " + \
+               "Or, if you want a joke on some specific topic from me, " + \
+               "just write me a question and I'll answer it in a playful form." + \
+               "\n\nTo help me learn, please sent feedback on jokes through the 👍/👎 buttons."
+
+DISCLAIMER_MESSAGE = "*DISCLAIMER*: This bot is still very dumb and " + \
+                     "produces a lot of dark and racist humor. " + \
+                     "Don't judge him, he learned them from the people"
 
 
 def send_typing_action(func):
@@ -71,9 +92,8 @@ def general_joke_handler(update, context, promt_text=""):
                  InlineKeyboardButton("👎", callback_data=f'{joke_id}{splitter}{neg}')]]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-
-    update.message.reply_text(
-        joke.text, reply_markup=reply_markup, parse_mode=telegram.ParseMode.HTML)
+    update.message.reply_text(joke.text, reply_markup=reply_markup,
+                              parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def button_handler(update, context):
@@ -88,8 +108,15 @@ def button_handler(update, context):
     context.bot.answer_callback_query(query.id, "Thank you for your feedback")
 
 
-def start(update, context):
-    update.message.reply_text("Use /joke to generate a joke")
+def start_handler(update, context):
+    update.message.reply_text(GREETING_MESSAGE + '\n\n'
+                              + HELP_MESSAGE + '\n\n' +
+                              DISCLAIMER_MESSAGE, parse_mode=telegram.ParseMode.MARKDOWN)
+
+
+def help_handler(update, context):
+    update.message.reply_text(HELP_MESSAGE + '\n\n' + DISCLAIMER_MESSAGE,
+                              parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def error(update, context):
@@ -105,7 +132,8 @@ def main():
 
     updater.dispatcher.add_handler(CommandHandler('joke', joke_command_handler))
     updater.dispatcher.add_handler(CallbackQueryHandler(button_handler))
-    updater.dispatcher.add_handler(CommandHandler('start', start))
+    updater.dispatcher.add_handler(CommandHandler('start', start_handler))
+    updater.dispatcher.add_handler(CommandHandler('help', help_handler))
     updater.dispatcher.add_handler(CallbackQueryHandler(text_handler))
     updater.dispatcher.add_error_handler(error)
     updater.dispatcher.add_handler(MessageHandler(Filters.text, text_handler))

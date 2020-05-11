@@ -5,6 +5,7 @@ from peewee import *
 db = SqliteDatabase('jokes.db')
 default_generated = "unknown"
 
+
 class BaseModel(Model):
     class Meta:
         database = db
@@ -38,7 +39,8 @@ def add_joke(text, generated_by=default_generated):
 
 def add_or_update_vote(joke_id, user_id, rating):
     # https://stackoverflow.com/questions/33485312/insert-or-update-a-peewee-record-in-python
-    Vote.insert(joke_id=joke_id, user_id=user_id, rate=rating).on_conflict('replace').execute()
+    Vote.insert(joke_id=joke_id, user_id=user_id,
+                rate=rating).on_conflict('replace').execute()
 
 
 db.connect()

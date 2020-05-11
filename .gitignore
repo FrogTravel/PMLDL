@@ -211,7 +211,7 @@ dmypy.json
 
 ### VisualStudioCode ###
 .vscode/*
-!.vscode/settings.json
+.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -229,8 +229,11 @@ model
 train/runs
 train/output*
 train/models
-
+train/ru_gpt2
 # prep files
 data/prep
 # jokes database
-jokes.db
+!jokes.db
+*.db
+# log files
+*.log
