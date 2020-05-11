@@ -59,10 +59,12 @@ class AbstractJokeGenerator(ABC):
         def pp_answer(text):
             """Pretty-print the answer."""
             # Remove all text after the stop token.
-            text = text[: text.find(self.config['stop_token'])
-                        if self.config['stop_token'] else None]
+            stop_token_ind = text.find(self.config.get('stop_token', None))
+            if stop_token_ind > -1:
+                text = text[:stop_token_ind]
             # Remove multiple answers.
-            text = self.config['answer_token'].join(text.split(self.config['answer_token'], 2)[:2])
+            text = self.config['answer_token'].join(
+                text.split(self.config['answer_token'], 2)[:2])
             # Escape markdown tokens.
             text = self._escape_markdown(text)
             # Replace model tokens with html formatted ones.
