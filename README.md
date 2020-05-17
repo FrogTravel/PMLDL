@@ -4,8 +4,6 @@ Language: Python
 
 Version Control: GitHub 
 
-Tests: Python unittest package 
-
 Tasks: [Trello](https://https://trello.com/invite/b/6k7nigbp/8d26ddad39c33393cf6053e7ac0ac4ac/pmldl)
 
 User Stories: [GitHub issues](https://github.com/FrogTravel/PMLDL/issues)
