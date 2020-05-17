@@ -10,7 +10,7 @@ User Stories: [GitHub issues](https://github.com/FrogTravel/PMLDL/issues)
 
 We are using feature-oriented branches
 
-Team: Irina Podlipnova, Boris Guryev, Ekaterina Levchenko (Scram Master), Vladislav Kuleykin
+Team: Irina Podlipnova, Boris Guryev, Ekaterina Levchenko (Scrum Master), Vladislav Kuleykin
 
 ## Project Proposal 
 
